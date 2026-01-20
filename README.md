@@ -9,12 +9,12 @@ This folder contains a Docker Compose setup for running Kafka, Zookeeper, and Ka
 3. Kafka will be available on:
    - Internal (for Rust app on same VM): `localhost:29092`
    - External (for indexer on other VM): `168.228.7.38:9095`
-4. Kafka UI: http://localhost:8080 (on VM03) or http://168.228.7.38:8080 (from other VMs)
+4. Kafka UI: http://localhost:8081 (on VM03) or http://168.228.7.38:8081 (from other VMs)
 
 ## Configuration
 
 - Replace `<VM03_IP>` in `docker-compose.yml` with VM03's IP for external access.
-- Open firewall on VM03 for ports 9095 (Kafka) and 8080 (UI) if needed.
+- Open firewall on VM03 for ports 9095 (Kafka) and 8081 (UI) if needed.
 
 ## Usage
 
