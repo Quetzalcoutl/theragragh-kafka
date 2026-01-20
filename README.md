@@ -2,15 +2,14 @@
 
 This folder contains a Docker Compose setup for running Kafka, Zookeeper, and Kafka UI on VM03 (the Rust VM).
 
-## Setup on VM03
+## Setup on VM03 (IP: 168.228.7.37)
 
-1. Copy this folder to VM03.
-2. Edit `docker-compose.yml` and replace `<VM03_IP>` with VM03's actual IP address.
-3. Run `docker-compose up -d` to start all services.
-4. Kafka will be available on:
+1. Clone this repo: `git clone https://github.com/Quetzalcoutl/theragragh-kaffka.git`
+2. Run `docker-compose up -d` to start all services.
+3. Kafka will be available on:
    - Internal (for Rust app on same VM): `localhost:29092`
-   - External (for indexer on other VM): `<VM03_IP>:9095`
-5. Kafka UI: http://localhost:8080 (on VM03) or http://<VM03_IP>:8080 (from other VMs)
+   - External (for indexer on other VM): `168.228.7.37:9095`
+4. Kafka UI: http://localhost:8080 (on VM03) or http://168.228.7.37:8080 (from other VMs)
 
 ## Configuration
 
