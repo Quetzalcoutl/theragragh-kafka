@@ -5,8 +5,6 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper
     container_name: theragraph-kafka-zookeeper
-    ports:
-      - "127.0.0.1:2181:2181" # bind to localhost to avoid public scanners hitting ZooKeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
