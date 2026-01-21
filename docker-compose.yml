@@ -11,6 +11,8 @@ services:
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
       - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - theragraph-net
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -55,6 +57,8 @@ services:
         hard: 65536
     volumes:
       - kafka_data:/var/lib/kafka/data
+    networks:
+      - theragraph-net
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -69,9 +73,15 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     volumes:
       - kafka_ui_data:/etc/kafkaui
+    networks:
+      - theragraph-net
 
 volumes:
   zookeeper_data:
   zookeeper_logs:
   kafka_data:
   kafka_ui_data:
+
+networks:
+  theragraph-net:
+    external: true
