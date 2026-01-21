@@ -1,0 +1,106 @@
+# Production-ready Docker Compose for Kafka (single-broker starter)
+# Notes:
+# - For real production use prefer a Kafka cluster (3 brokers) and a Zookeeper ensemble or use KRaft mode.
+# - Keep data on persistent volumes and back them up regularly.
+# - Set EXTERNAL_HOST_IP in `.env.prod` to your VM/public IP or load-balancer hostname.
+# - In Coolify, treat Kafka as a separate app and use the internal network address for services running in the same project.
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    # Do not set container_name in production orchestration — let the orchestrator manage names
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "echo ruok | nc 127.0.0.1 2181 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    networks:
+      - theragraph-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "${EXTERNAL_HOST_PORT:-9095}:9095"   # external/public port (configurable via EXTERNAL_HOST_PORT)
+      - "29092:29092" # internal container port for intra-network binding
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Use EXTERNAL_HOST_IP to advertise the external listener; set this in `.env.prod` or override via your environment provider
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://${EXTERNAL_HOST_IP:-127.0.0.1}:9095
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9095
+      # In production, increase replication factors to >=2 (prefer 3 with multi-broker clusters)
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:-1}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR:-1}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR:-1}
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: 127.0.0.1
+      # Disable auto-create topics in production to avoid accidental topics
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE:-'false'}
+      # Tune these as needed for your workload
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600
+      KAFKA_MAX_CONNECTIONS_PER_IP: 2000
+      KAFKA_NUM_NETWORK_THREADS: 3
+      KAFKA_NUM_IO_THREADS: 8
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server 127.0.0.1:29092 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - theragraph-net
+    # If using Docker Swarm or other orchestrator, configure resource limits and replicas in `deploy` section
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: production
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
+    networks:
+      - theragraph-net
+
+volumes:
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  kafka_data:
+    driver: local
+  kafka_ui_data:
+    driver: local
+
+networks:
+  theragraph-net:
+    external: true

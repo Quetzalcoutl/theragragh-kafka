@@ -1,0 +1,14 @@
+# Ignore environment files and secrets
+.env
+.env.*
+.env.prod
+# Ignore private keys and certificates
+*.pem
+*.key
+*.crt
+*.jks
+# Ignore editor/OS files
+.DS_Store
+.vscode/
+# Ignore temporary/test data
+*.log
