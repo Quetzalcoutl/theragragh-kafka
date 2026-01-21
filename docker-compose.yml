@@ -29,11 +29,12 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://168.228.7.38:9095  # VM03 IP for external access
+      # Use EXTERNAL_HOST_IP env to set external advertised listener (set in `.env.prod` or Coolify env)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://${EXTERNAL_HOST_IP:-168.228.7.38}:9095
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9095
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:-1}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR:-1}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR:-1}
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
@@ -47,10 +48,11 @@ services:
       # KAFKA_ADVERTISED_LISTENERS override example: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://<VM_IP>:9095
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server localhost:9095 >/dev/null 2>&1 || exit 1"]
+      test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server 127.0.0.1:29092 >/dev/null 2>&1 || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 6
+      timeout: 10s
+      retries: 10
+      start_period: 20s
     ulimits:
       nofile:
         soft: 65536
