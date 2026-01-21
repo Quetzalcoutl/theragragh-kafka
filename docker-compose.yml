@@ -20,14 +20,14 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "19095:9095"  # Temporarily map external to 19095 locally to avoid colima binding 9095
+      - "9095:9095"  # External port for other VMs
       - "29092:29092"  # Internal port
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://host.docker.internal:19095  # Advertise host.docker.internal:19095 so container clients can reach the broker
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://168.228.7.38:9095  # VM03 IP for external access
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9095
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -36,6 +36,21 @@ services:
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      # Performance & safety tuning
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600
+      KAFKA_MAX_CONNECTIONS_PER_IP: 2000
+      KAFKA_NUM_NETWORK_THREADS: 3
+      KAFKA_NUM_IO_THREADS: 8
+      # Optional overrides for production (set in env for Coolify)
+      # KAFKA_ADVERTISED_LISTENERS override example: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://<VM_IP>:9095
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "kafka-broker-api-versions --bootstrap-server localhost:9095 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    ulimits:
+      nofile: 65536:65536
     volumes:
       - kafka_data:/var/lib/kafka/data
 
