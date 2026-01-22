@@ -5,10 +5,11 @@ Overview
 - If self-hosting, prefer a multi-broker cluster with proper replication and TLS/SASL. The provided `docker-compose.prod.yml` is a single-broker starter that can be used in small-production or staging; it is NOT a full HA cluster.
 
 Quick start (self-hosted single-broker staging)
-1. Populate secrets in your environment manager (Coolify) or create a local `.env.prod` (DO NOT COMMIT).
+1. Populate secrets in your environment manager (Coolify) or use a local `ffolder` containing one file per secret (DO NOT COMMIT). See `scripts/load_ffolder_env.sh` for a helper to export files from `ffolder` into your shell.
 2. Start stack (from `theragraph-kafka`):
-   - `cd theragraph-kafka` 
-   - `EXTERNAL_HOST_PORT=19095 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d`
+   - `cd theragraph-kafka`
+   - `# If using ffolder locally: source ./scripts/load_ffolder_env.sh && EXTERNAL_HOST_PORT=19095 docker compose -f docker-compose.prod.yml up -d`
+   - `# If using a single env file (legacy): EXTERNAL_HOST_PORT=19095 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d`
 3. Create topics using the helper script:
    - `./scripts/create-topic.sh my.topic 3 1`
 
