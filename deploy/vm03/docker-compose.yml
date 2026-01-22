@@ -85,11 +85,13 @@ services:
     environment:
       - KAFKA_BROKERS=kafka:29092
       - RUST_LOG=info
+      - DEBUG_HEALTHCHECK=true
     ports:
-      - "8081:8081"
+      - "8082:8081"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "bash", "-lc", "curl -fsS http://127.0.0.1:8081/health || exit 1"]
+      # Use the app's healthcheck script (captures diagnostics and respects DEBUG_HEALTHCHECK)
+      test: ["CMD", "bash", "-lc", "/app/healthcheck.sh || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 6
