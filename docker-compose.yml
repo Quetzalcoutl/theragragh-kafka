@@ -13,6 +13,7 @@ services:
       - zookeeper_logs:/var/lib/zookeeper/log
     networks:
       - theragraph-net
+      - coolify
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -61,6 +62,7 @@ services:
       - kafka_data:/var/lib/kafka/data
     networks:
       - theragraph-net
+      - coolify
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -77,6 +79,7 @@ services:
       - kafka_ui_data:/etc/kafkaui
     networks:
       - theragraph-net
+      - coolify
 
 volumes:
   zookeeper_data:
@@ -87,3 +90,6 @@ volumes:
 networks:
   theragraph-net:
     external: true
+  coolify:
+    external: true
+    name: coolify
