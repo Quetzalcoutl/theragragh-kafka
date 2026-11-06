@@ -23,8 +23,10 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9095:9095"  # External port for other VMs
-      - "29092:29092"  # Internal port
+      # The ONLY published port: the external listener, for the other VMs (the Elixir indexer). It is PLAINTEXT with no login, so the
+      # host firewall must allow it from those VMs only (2026-11-06: it was open to the internet and a scanner was already probing it).
+      - "9095:9095"
+      # 29092 (the internal listener) is deliberately NOT published: containers on the shared Docker network reach it as kafka:29092.
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -64,28 +66,13 @@ services:
       - theragraph-net
       - coolify
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: theragraph-kafka-ui
-    depends_on:
-      - kafka
-    ports:
-      - "8081:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    volumes:
-      - kafka_ui_data:/etc/kafkaui
-    networks:
-      - theragraph-net
-      - coolify
+  # (No kafka-ui here: it has no login by default, and Coolify gave it a public address and the host port 8081. Add it back only behind
+  # authentication (AUTH_TYPE) and bound to a private interface.)
 
 volumes:
   zookeeper_data:
   zookeeper_logs:
   kafka_data:
-  kafka_ui_data:
 
 networks:
   theragraph-net:
