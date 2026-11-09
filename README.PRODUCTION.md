@@ -21,7 +21,7 @@ Coolify / Production hints
 
 Security & Ops
 - Enable TLS/SASL for production Kafka (or run Kafka in a private network + restrict access via firewall).
-- Monitor broker metrics (Prometheus + Grafana) and set alerts for under-replicated partitions, consumer lag, and broker health.
+- Monitor broker metrics (Prometheus) and set alerts for under-replicated partitions, consumer lag, and broker health.
 - Back up / snapshot broker data. Prefer multi-broker clusters for resilience.
 
 Support
